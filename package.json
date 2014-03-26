@@ -3,7 +3,10 @@
   "description": "where everyone knows your name",
   "version": "0.0.1",
   "private": true,
+  "scripts": {
+      "start": "nodemon app.js"
+    },
   "dependencies": {
-    "express.io": "latest",
+    "express.io": "latest"
   }
 }

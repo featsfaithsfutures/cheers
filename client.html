@@ -4,28 +4,28 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
   </head>
-
   <body>
-      <div>
-        School id: <input type="text" id="schoolid" />
-        <div id="count"></div>
-        <input id="cheerButton" type="button" value="cheer!"/>
-      </div>
+    <div>
+      School id: <input type="text" id="schoolid" />
+      <div id="count"></div>
+      <input id="cheerButton" type="button" value="cheer!"/>
+    </div>
   </body>
   <script>
-  io = io.connect()
-  // Emit ready event with school id but this forms a smaller room.
-  $( "#cheerButton").click(function(){
-    schoolid = $('#schoolid').val()
-    console.log("cheering for school id " + schoolid)
-    io.emit('roomCheer!', {id: schoolid})
-  });
+    io = io.connect()
+
+    // Emit event with school id but this forms a smaller room.
+    $( "#cheerButton").click(function(){
+      schoolid = $('#schoolid').val()
+      console.log("cheering for school id: " + schoolid)
+      io.emit('cheer!', {id: schoolid})      
+    });
 
 
-  // Listen for the count, but this is only sent to listeners for this school
-  io.on('roomCheerCount', function(data) {
-      $('#count').html('<p>roomCheers!:' + data.cheers +' </p>')
-  })
+    // Listen for the count, but this is only sent to listeners for this school
+    io.on('cheerCount', function(data) {
+      $('#count').html('<p>cheers = ' + data.cheers +' </p>')
+    })
 
-</script>
+  </script>
 </html>
