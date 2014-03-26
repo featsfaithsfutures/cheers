@@ -7,6 +7,7 @@
       "start": "nodemon app.js"
     },
   "dependencies": {
-    "express.io": "latest"
+    "express.io": "latest",
+    "nodemon": "latest"
   }
 }
