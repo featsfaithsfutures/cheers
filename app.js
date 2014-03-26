@@ -1,46 +1,25 @@
+app = require('express.io')()
+app.http().io()
+var port = 2014
+// hacky "global" to keep track of cheers. Drops back to zero on process exit
+var cheers = []
+app.io.route('cheer!', function(req) {
+  schoolid = req.data.id
+  cheers[schoolid] = (++cheers[schoolid] || 0)
+  req.io.broadcast("cheerCount", {cheers: cheers[schoolid]})
+})
 
-/**
- * Module dependencies.
- */
+app.io.route('roomCheer!', function(req) {
+  schoolid = req.data.id
+  req.io.join(schoolid)
+  cheers[schoolid] = (++cheers[schoolid] || 0)
+  req.io.room(schoolid).broadcast("roomCheerCount", {cheers: cheers[schoolid]})
+})
 
-var express = require('express');
-var routes = require('./routes');
-var io = require('socket.io');
-var hubs = require('./hubs');
-var user = require('./routes/user');
-var http = require('http');
-var path = require('path');
 
-var app = express();
+// Send the client html.
+app.get('/cheer', function(req, res) {
+    res.sendfile(__dirname + '/client.html')
+})
 
-// all environments
-app.set('port', process.env.PORT || 3000);
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hjs');
-app.use(express.favicon());
-app.use(express.logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded());
-app.use(express.methodOverride());
-app.use(express.cookieParser('your secret here'));
-app.use(express.session());
-app.use(app.router);
-app.use(require('less-middleware')(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'public')));
-
-// development only
-if ('development' == app.get('env')) {
-  app.use(express.errorHandler());
-}
-
-app.get('/', routes.index);
-app.get('/users', user.list);
-
-var server = http.createServer(app);
-server.listen(app.get('port'), function(){
-    console.log('Express server listening on port ' + app.get('port'));
-});
-
-var sio = io.listen(server);
-// setup socket io
-hubs.initializeHubs(sio);
+app.listen(port)
