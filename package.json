@@ -1,13 +1,13 @@
 {
-  "name": "application-name",
+  "name": "cheers",
+  "description": "where everyone knows your name",
   "version": "0.0.1",
   "private": true,
   "scripts": {
-    "start": "node app.js"
-  },
+      "start": "nodemon app.js"
+    },
   "dependencies": {
-    "express": "3.5.1",
-    "hjs": "*",
-    "less-middleware": "~0.1.15"
+    "express.io": "latest",
+    "nodemon": "latest"
   }
 }

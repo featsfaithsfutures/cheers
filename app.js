@@ -1,46 +1,41 @@
+app = require('express.io')()
+app.http().io()
+var port = 2014
+// hacky "global" to keep track of cheers. Drops back to zero on process exit
+var cheers = []
 
-/**
- * Module dependencies.
- */
 
-var express = require('express');
-var routes = require('./routes');
-var io = require('socket.io');
-var hubs = require('./hubs');
-var user = require('./routes/user');
-var http = require('http');
-var path = require('path');
+app.io.route('cheer!', function(req) {
+  // need to make sure clients are unique in max counts & room joining 
+  schoolid = req.data.id
+  console.log("joining room <" +schoolid+ ">")
+  req.io.join(schoolid)
+  console.log("registering a cheer for school <" +schoolid+ ">")
+  cheers[schoolid] = (++cheers[schoolid] || 0) // max cheers in this process lifetime
+  console.log("broadcasting cheer count = " +  app.io.sockets.clients(schoolid).length)
+  
+  // broadcast this to _all_ clients connected to this school room
+  app.io.room(schoolid).broadcast("cheerCount", 
+    {cheers: app.io.sockets.clients(schoolid).length}
+  )
+})
 
-var app = express();
+app.io.route('noMoreCheers', function(req) {
+  schoolid = req.data.id
+  console.log("departing room <" +schoolid+ ">")
+  req.io.leave(schoolid)
+  // broadcast this to _all_ clients connected to this school room
+  console.log("broadcasting cheer count = " +  app.io.sockets.clients(schoolid).length)
+  app.io.room(schoolid).broadcast("cheerCount", 
+    {cheers: app.io.sockets.clients(schoolid).length}
+  )
+  req.io.respond({cheers: app.io.sockets.clients(schoolid).length})
+})
 
-// all environments
-app.set('port', process.env.PORT || 3000);
-app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'hjs');
-app.use(express.favicon());
-app.use(express.logger('dev'));
-app.use(express.json());
-app.use(express.urlencoded());
-app.use(express.methodOverride());
-app.use(express.cookieParser('your secret here'));
-app.use(express.session());
-app.use(app.router);
-app.use(require('less-middleware')(path.join(__dirname, 'public')));
-app.use(express.static(path.join(__dirname, 'public')));
 
-// development only
-if ('development' == app.get('env')) {
-  app.use(express.errorHandler());
-}
+// Send the client html.
+app.get('/cheer', function(req, res) {
+    res.sendfile(__dirname + '/client.html')
+})
 
-app.get('/', routes.index);
-app.get('/users', user.list);
-
-var server = http.createServer(app);
-server.listen(app.get('port'), function(){
-    console.log('Express server listening on port ' + app.get('port'));
-});
-
-var sio = io.listen(server);
-// setup socket io
-hubs.initializeHubs(sio);
+app.listen(port)
