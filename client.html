@@ -24,6 +24,7 @@
     </div>
   </body>
   <script>
+  
     io = io.connect()
 
     var timeout, holder = $('#cheerHold');    
@@ -34,6 +35,8 @@
       // even though 0 is being broadcast
       // i'm too dumb to figure it out now
     })
+    
+    // maybe an onload method for populating the cheer number for a school id?
     
     holder.on("vmousedown", function(){
         schoolid = $('#schoolid').val()
@@ -52,7 +55,10 @@
         schoolid = $('#schoolid').val()
         console.log("departing cheering for school id: " + schoolid)
         clearInterval(timeout);
-        io.emit('noMoreCheers', {id: schoolid})   
+        // momentary HACK to see zero
+        io.emit('noMoreCheers', {id: schoolid}, function(data){
+          $('#count').html('<p>cheers = ' + data.cheers +' </p>')
+        })   
         return false;
     });
     

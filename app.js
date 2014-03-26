@@ -4,6 +4,7 @@ var port = 2014
 // hacky "global" to keep track of cheers. Drops back to zero on process exit
 var cheers = []
 
+
 app.io.route('cheer!', function(req) {
   // need to make sure clients are unique in max counts & room joining 
   schoolid = req.data.id
@@ -28,6 +29,7 @@ app.io.route('noMoreCheers', function(req) {
   app.io.room(schoolid).broadcast("cheerCount", 
     {cheers: app.io.sockets.clients(schoolid).length}
   )
+  req.io.respond({cheers: app.io.sockets.clients(schoolid).length})
 })
 
 
