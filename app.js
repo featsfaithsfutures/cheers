@@ -7,8 +7,8 @@ var port = process.env.PORT || 2014
 var schoolCheers = [];
 
 app.io.route('cheer!', function(req) {
-    // need to make sure clients are unique in max counts & room joining
     schoolid = req.data.id;
+    if(schoolid < 0) return;
     // check if the current socket is cheering, if cheering, add to the schoolCheer array
     if(!_.contains(schoolCheers[schoolid], req.socket.id))
     {
@@ -16,13 +16,13 @@ app.io.route('cheer!', function(req) {
         schoolCheers[schoolid].push(req.socket.id);
         // broadcast this to _all_ clients connected to this school room
         updateRoom(schoolid);
-        console.log("broadcasting cheer count = " +  schoolCheers[schoolid].length);
     }
 
 })
 
 app.io.route('noMoreCheers', function(req) {
     schoolid = req.data.id;
+    if(schoolid < 0) return;
 
     // check if the current socket is cheering, if cheering, remove from the schoolCheer array
     if(_.contains(schoolCheers[schoolid], req.socket.id))
@@ -33,7 +33,6 @@ app.io.route('noMoreCheers', function(req) {
 
         // broadcast this to _all_ clients connected to this school room
         updateRoom(schoolid);
-        console.log("broadcasting cheer count = " +  schoolCheers[schoolid].length);
     }
 })
 
@@ -68,6 +67,7 @@ app.get('/schools', function(req, res) {
 app.listen(port)
 
 function updateRoom(id){
+    console.log("broadcasting cheer count = " +  schoolCheers[schoolid].length);
     app.io.room(id).broadcast("cheerCount",
         {cheers: schoolCheers[schoolid].length}
     )

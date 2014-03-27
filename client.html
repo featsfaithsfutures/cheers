@@ -28,6 +28,10 @@
     </div>
   </body>
   <script>
+
+      // Global Properties
+      var lastSelectedSchool = -1;
+
       $.ajax({
         url: '/schools',
         dataType: 'json',
@@ -39,12 +43,10 @@
       })
 
       $('#schoolid').change(function(){
-          selectedId = $(this).val();
-          if(selectedId > 0){
-            joinSchoolRoom(selectedId);
-          }
-          else{
-              leaveSchoolRoom(selectedId);
+          leaveSchoolRoom(lastSelectedSchool);
+          lastSelectedSchool = $(this).val();
+          if(lastSelectedSchool > 0){
+            joinSchoolRoom(lastSelectedSchool);
           }
       });
 
@@ -61,13 +63,15 @@
         // maybe an onload method for populating the cheer number for a school id?
 
         holder.on("vmousedown", function(){
-            // register a timeout that sends the cheer event every 500ms once the button is being pressed.
-            timeout = setInterval(function(){
-                schoolid = $('#schoolid').val();
-                console.log("cheering for school id: " + schoolid);
-                io.emit('cheer!', {id: schoolid});
-            }, 500);
+            schoolid = $('#schoolid').val();
+            if(schoolid >= 0){
+                // register a timeout that sends the cheer event every 500ms once the button is being pressed.
+                timeout = setInterval(function(){
 
+                    console.log("cheering for school id: " + schoolid);
+                    io.emit('cheer!', {id: schoolid});
+                }, 500);
+            }
             return false;
         });
 
