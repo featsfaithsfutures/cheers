@@ -40,6 +40,15 @@ app.io.route('noMoreCheers', function(req) {
     req.io.emit('cheerCount', {cheers: remainingCheerers})
 })
 
+// websocket route/event for getting current cheer count for any school
+app.io.route('cheerCount', function(req){
+  schoolid = req.data.id;
+  if(schoolid < 0) return;
+  cheerers = getCurrentCheerersForSchool(schoolid)
+  console.log("sending count of <" + cheerers +"> for  <" +schoolid+ ">")
+  req.io.emit('cheerCount', {cheers: cheerers})
+})
+
 // Route for joining a school room by Id
 app.io.route('joinSchool', function(req) {
     schoolid = req.data.id
@@ -57,7 +66,17 @@ app.io.route('leaveSchool', function(req){
 })
 
 
+
 // Send the client html.
+
+// plain http for getting current cheer count for any school
+app.get('/cheer_count/:id', function(req, res){
+  schoolid = req.params.id;
+  if(schoolid < 0) return {};
+  res.json({cheers: getCurrentCheerersForSchool(schoolid)})
+})
+
+
 app.get('/cheer', function(req, res) {
     res.sendfile(__dirname + '/client.html')
 })

@@ -45,8 +45,8 @@
       $('#schoolid').change(function(){
           leaveSchoolRoom(lastSelectedSchool);
           lastSelectedSchool = $(this).val();
-          if(lastSelectedSchool > 0){
-            joinSchoolRoom(lastSelectedSchool);
+          if(lastSelectedSchool >= 0){
+             io.emit('cheerCount', {id: lastSelectedSchool});
           }
       });
 
