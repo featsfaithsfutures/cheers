@@ -1,7 +1,10 @@
 var _ = require('underscore');
 app = require('express.io')()
+var nconf   = require('nconf')
+var SbStore = require('socket.io-servicebus');
 app.http().io()
 var port = process.env.PORT || 2014
+nconf.file('config.json').env();
 
 // array of array: this is a list of schools who also has a list of session ids of the people cheering.
 var schoolCheers = [];
@@ -69,4 +72,13 @@ app.get('/cheer', function(req, res) {
 app.get('/schools', function(req, res) {
     res.sendfile(__dirname + '/schools.json')
 })
+
+app.io.configure(function(){
+  app.io.set('store', new SbStore({
+    topic: nconf.get("SERVICE_BUS_TOPIC"),
+    connectionString: nconf.get("SERVICE_BUS_ENDPOINT"),
+    logger: app.io.get('logger')
+  }));
+});
+
 app.listen(port)
