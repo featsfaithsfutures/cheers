@@ -9,20 +9,13 @@ var schoolCheers = [];
 app.io.route('cheer!', function(req) {
     // need to make sure clients are unique in max counts & room joining
     schoolid = req.data.id;
-
-    // create array object for new school
-    if(schoolCheers[schoolid] == null){
-        schoolCheers[schoolid] = new Array();
-    }
     // check if the current socket is cheering, if cheering, add to the schoolCheer array
     if(!_.contains(schoolCheers[schoolid], req.socket.id))
     {
         console.log("registering a cheer for school <" +schoolid+ ">");
         schoolCheers[schoolid].push(req.socket.id);
         // broadcast this to _all_ clients connected to this school room
-        app.io.room(schoolid).broadcast("cheerCount",
-            {cheers: schoolCheers[schoolid].length}
-        )
+        updateRoom(schoolid);
         console.log("broadcasting cheer count = " +  schoolCheers[schoolid].length);
     }
 
@@ -39,9 +32,7 @@ app.io.route('noMoreCheers', function(req) {
         schoolCheers[schoolid] = _.without(schoolCheers[schoolid], _.findWhere(schoolCheers[schoolid], req.socket.id));
 
         // broadcast this to _all_ clients connected to this school room
-        app.io.room(schoolid).broadcast("cheerCount",
-            {cheers: schoolCheers[schoolid].length}
-        )
+        updateRoom(schoolid);
         console.log("broadcasting cheer count = " +  schoolCheers[schoolid].length);
     }
 })
@@ -49,8 +40,13 @@ app.io.route('noMoreCheers', function(req) {
 // Route for joining a school room by Id
 app.io.route('joinSchool', function(req) {
     schoolid = req.data.id
+    // create array object for new school
+    if(schoolCheers[schoolid] == null){
+        schoolCheers[schoolid] = new Array();
+    }
     console.log("joining room <" +schoolid+ ">")
     req.io.join(schoolid)
+    updateRoom(schoolid);
 })
 // Route for leaving a school room by Id
 app.io.route('leaveSchool', function(req){
@@ -70,3 +66,9 @@ app.get('/schools', function(req, res) {
     res.sendfile(__dirname + '/schools.json')
 })
 app.listen(port)
+
+function updateRoom(id){
+    app.io.room(id).broadcast("cheerCount",
+        {cheers: schoolCheers[schoolid].length}
+    )
+}
