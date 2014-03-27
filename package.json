@@ -10,6 +10,7 @@
     "express.io": "latest",
     "nodemon": "latest",
     "socket.io-servicebus": "latest",
-    "nconf":"latest"
+    "nconf":"latest",
+    "underscore": "latest"
   }
 }
