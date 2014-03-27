@@ -31,26 +31,29 @@ app.io.route('cheer!', function(req) {
 app.io.route('noMoreCheers', function(req) {
     schoolid = req.data.id;
     if(schoolid < 0) return;
-    console.log("de-registering a cheer for school <" +schoolid+ ">");
+    console.log("de-registering to cheer for school <" +schoolid+ ">");
     req.io.leave(schoolid)
     console.log("departed room <" +schoolid+ ">")
     updateRoom(schoolid);
+    remainingCheerers = getCurrentCheerersForSchool(schoolid)
+    console.log("sending final count of <" + remainingCheerers +"> for  <" +schoolid+ ">")
+    req.io.emit('cheerCount', {cheers: remainingCheerers})
 })
 
 // Route for joining a school room by Id
 app.io.route('joinSchool', function(req) {
     schoolid = req.data.id
-    console.log("joining room <" +schoolid+ ">")
-    req.io.join(schoolid)
-    updateRoom(schoolid);
+    console.log("got join school event for <" +schoolid+ ">")
+    //req.io.join(schoolid)
+    //updateRoom(schoolid);
 })
 
 // Route for leaving a school room by Id
 app.io.route('leaveSchool', function(req){
     schoolid = req.data.id
-    console.log("departing room <" +schoolid+ ">")
-    req.io.leave(schoolid)
-    updateRoom(schoolid);    
+    console.log("got leave school event for<" +schoolid+ ">")
+    //req.io.leave(schoolid)
+    //updateRoom(schoolid);    
 })
 
 
@@ -91,7 +94,7 @@ app.get('/admin', function(req, res) {
 app.listen(port)
 
 function updateRoom(id){
-    console.log("broadcasting cheer count = " +   getCurrentCheerersForSchool(schoolid));
+    console.log("broadcasting cheer count = <" +   getCurrentCheerersForSchool(schoolid) + "> for school <" + id + ">");
     app.io.room(id).broadcast("cheerCount",
         {cheers: getCurrentCheerersForSchool(schoolid), schoolId: id}
     )

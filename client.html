@@ -67,11 +67,11 @@
             schoolid = $('#schoolid').val();
             if(schoolid >= 0){
                 // register a timeout that sends the cheer event every 500ms once the button is being pressed.
-                timeout = setInterval(function(){
+                //timeout = setInterval(function(){
 
                     console.log("cheering for school id: " + schoolid);
                     io.emit('cheer!', {id: schoolid});
-                }, 1000);
+                //}, 1000);
             }
             return false;
         });
