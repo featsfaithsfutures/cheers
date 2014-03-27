@@ -73,6 +73,28 @@ app.get('/schools', function(req, res) {
     res.sendfile(__dirname + '/schools.json')
 })
 
+/*
+
+// stubbed out for later use when/if converting console logging to in browser
+app.io.route('admin-listen', function(req) {
+  req.io.join("admin")
+}
+
+app.io.route('admin-depart', function(req) {
+  req.io.leave("admin")
+}
+
+// Send the admin html.
+app.get('/admin', function(req, res) {
+    res.sendfile(__dirname + '/admin.html')
+})
+*/
+
+/*
+ look at setInterval(callback, delay, [arg], [...]) for running archival queue push
+*/
+
+
 app.io.configure(function(){
   app.io.set('store', new SbStore({
     topic: nconf.get("SERVICE_BUS_TOPIC"),
