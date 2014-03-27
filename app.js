@@ -1,6 +1,6 @@
 app = require('express.io')()
 app.http().io()
-var port = 2014
+var port = process.env.PORT || 2014
 // hacky "global" to keep track of cheers. Drops back to zero on process exit
 var cheers = []
 
