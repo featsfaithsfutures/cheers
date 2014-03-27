@@ -20,61 +20,75 @@
   </head>
   <body>
     <div>
-      <select id="schoolid" value="Default High"></select>
+      <select id="schoolid" value="Default High">
+          <option value="-1">Select a School...</option>
+      </select>
       <div id="count">?</div>
       <button id="cheerHold">Cheer</button>
     </div>
   </body>
   <script>
-  
-  $.ajax({
-    url: '/schools',
-    dataType: 'json',
-    success: function( json ) {
-        $.each(json, function(i, name) {
-            $('#schoolid').append($('<option>').text(name).attr('value', i));
+      $.ajax({
+        url: '/schools',
+        dataType: 'json',
+        success: function( json ) {
+            $.each(json, function(i, name) {
+                $('#schoolid').append($('<option>').text(name).attr('value', i));
+            });
+        }
+      })
+
+      $('#schoolid').change(function(){
+          selectedId = $(this).val();
+          if(selectedId > 0){
+            joinSchoolRoom(selectedId);
+          }
+          else{
+              leaveSchoolRoom(selectedId);
+          }
+      });
+
+      io = io.connect()
+
+
+
+        var timeout, holder = $('#cheerHold');
+
+        io.on('cheerCount', function(data) {
+          $('#count').html(data.cheers);
+        })
+
+        // maybe an onload method for populating the cheer number for a school id?
+
+        holder.on("vmousedown", function(){
+            // register a timeout that sends the cheer event every 500ms once the button is being pressed.
+            timeout = setInterval(function(){
+                schoolid = $('#schoolid').val();
+                console.log("cheering for school id: " + schoolid);
+                io.emit('cheer!', {id: schoolid});
+            }, 500);
+
+            return false;
         });
-    }
-  })
-    io = io.connect()
 
-    var timeout, holder = $('#cheerHold');    
-
-    io.on('cheerCount', function(data) {
-      $('#count').html(data.cheers)
-      // this isn't being reset to 0 after all presses are released 
-      // even though 0 is being broadcast
-      // i'm too dumb to figure it out now
-    })
-    
-    // maybe an onload method for populating the cheer number for a school id?
-    
-    holder.on("vmousedown", function(){
-        schoolid = $('#schoolid').val()
-        console.log("cheering for school id: " + schoolid)
-        io.emit('cheer!', {id: schoolid})      
-        //timeout = setInterval(function(){
-          // do some stuff while the button is being held down
-          // perhaps only register for cheerCounts while held down
-          //}, 500);
-
-        return false;
-    });
-
-    holder.on("vmouseup", function(){
-      console.log("button released")
-        schoolid = $('#schoolid').val()
-        console.log("departing cheering for school id: " + schoolid)
-        clearInterval(timeout);
-        // momentary HACK to see zero
-        io.emit('noMoreCheers', {id: schoolid}, function(data){
-          $('#count').html(data.cheers)
-        })   
-        return false;
-    });
-    
+        holder.on("vmouseup", function(){
+          console.log("button released")
+            schoolid = $('#schoolid').val()
+            console.log("departing cheering for school id: " + schoolid)
+            clearInterval(timeout);
+            // explicitly tell the server that we have stopped cheering.
+            io.emit('noMoreCheers', {id: schoolid})
+            return false;
+        });
 
 
+        function joinSchoolRoom(id){
+            io.emit('joinSchool', {id: id})
+        }
+
+        function leaveSchoolRoom(id){
+            io.emit('leaveSchool', {id: id})
+        }
 
   </script>
 </html>
