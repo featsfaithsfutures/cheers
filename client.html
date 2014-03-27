@@ -75,7 +75,7 @@
             return false;
         });
 
-        holder.on("vmouseup", function(){
+        holder.on("vmouseup mouseup mouseleave", function(){
           console.log("button released")
             schoolid = $('#schoolid').val()
             console.log("departing cheering for school id: " + schoolid)
