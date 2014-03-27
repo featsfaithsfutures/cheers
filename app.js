@@ -100,13 +100,15 @@ function updateRoom(id){
     )
 }
 
+// hide the implentation incase we go back to a sep. external array
 function getCurrentCheerersForSchool(schoolid){
   return app.io.sockets.clients(schoolid).length
 }
 
+// return a mapping of room/school ids to number of participants (cheerers)
 function getAllCurrentCheerers(){
   result = _.inject(app.io.sockets.manager.rooms, function(all, socketids, room){
-    all[ ( room == "" ) ? "total" : room.slice(-1) ] = socketids.length     
+    if( room != "" ) { all[room.slice(-1)] = socketids.length }
     return all
   },{})
   return result
