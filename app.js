@@ -12,6 +12,8 @@ app.io.route('cheer!', function(req) {
     // check if the current socket is cheering, if cheering, add to the schoolCheer array
     if(!_.contains(schoolCheers[schoolid], req.socket.id))
     {
+        // TODO: Add a timeout here so we can remove this user if not cheering for the past
+        // 1000 ms and was also not manually removed by 'noMoreCheers' (if connection was dropped, we have to remove)
         console.log("registering a cheer for school <" +schoolid+ ">");
         schoolCheers[schoolid].push(req.socket.id);
         // broadcast this to _all_ clients connected to this school room
