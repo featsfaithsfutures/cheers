@@ -9,28 +9,39 @@
     <style type="text/css">
       #count {height: 1.5em;}
       #cheerHold {
-         width: 3em;
-         height: 3em;
-         background-color: #ee4;
-         padding: 0.25em;
-       }
+        color: white;
+        font-size: 150%;
+        border-radius: 8px;
+        padding: 4px;
+        text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+        background: #5DB793;
+      }
     </style>
   </head>
   <body>
     <div>
-      School id: <input type="text" id="schoolid" value="Default High"/>
-      <div id="count"></div>
-      <div id="cheerHold">cheer<div>
+      <select id="schoolid" value="Default High"></select>
+      <div id="count">?</div>
+      <button id="cheerHold">Cheer</button>
     </div>
   </body>
   <script>
   
+  $.ajax({
+    url: '/schools',
+    dataType: 'json',
+    success: function( json ) {
+        $.each(json, function(i, name) {
+            $('#schoolid').append($('<option>').text(name).attr('value', i));
+        });
+    }
+  })
     io = io.connect()
 
     var timeout, holder = $('#cheerHold');    
 
     io.on('cheerCount', function(data) {
-      $('#count').html('<p>cheers = ' + data.cheers +' </p>')
+      $('#count').html(data.cheers)
       // this isn't being reset to 0 after all presses are released 
       // even though 0 is being broadcast
       // i'm too dumb to figure it out now
@@ -57,7 +68,7 @@
         clearInterval(timeout);
         // momentary HACK to see zero
         io.emit('noMoreCheers', {id: schoolid}, function(data){
-          $('#count').html('<p>cheers = ' + data.cheers +' </p>')
+          $('#count').html(data.cheers)
         })   
         return false;
     });
