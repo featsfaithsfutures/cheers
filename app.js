@@ -38,4 +38,8 @@ app.get('/cheer', function(req, res) {
     res.sendfile(__dirname + '/client.html')
 })
 
+// Send the client html.
+app.get('/schools', function(req, res) {
+    res.sendfile(__dirname + '/schools.json')
+})
 app.listen(port)
