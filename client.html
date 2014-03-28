@@ -55,6 +55,8 @@
       io.on('cheerCount', function(data) {
         console.log("got cheer count of <"+data.cheers+"> for school <"+data.schoolId+">")
         $('#count').html(data.cheers);
+          percent = (data.cheers / data.totalCheers) * 100;
+          updateVolume(percent);
       })
 
       holder.on("vmousedown", function(){
