@@ -122,12 +122,14 @@ width: 9em;
 margin: auto;
 border: 6px solid #fff;
 box-shadow: 0px 0px 10px #333;
-transition:linear .05s;
+transition:linear .1s;
 }
 
 #cheerHold:active{
-	background: #000;
-	transition:linear .05s;
+	border: 6px solid #ff8b8b;
+	background: #ff1212;
+	box-shadow: 0px 0px 30px #333;
+	transition:linear .1s;
 }
 
 
