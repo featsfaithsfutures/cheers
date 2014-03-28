@@ -90,7 +90,7 @@ app.get('/cheer_count/:id', function(req, res){
 })
 
 
-app.get('/cheer', function(req, res) {
+app.get('/', function(req, res) {
     res.sendfile(__dirname + '/client.html')
 })
 
