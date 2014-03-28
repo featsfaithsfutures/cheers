@@ -1,8 +1,10 @@
 var _ = require('underscore');
+fileSystem = require('fs');
+path = require('path');
 app = require('express.io')()
-var nconf   = require('nconf')
+nconf   = require('nconf')
 app.http().io()
-var port = process.env.PORT || 2014
+port = process.env.PORT || 2014
 nconf.file('config.json').env();
 
 if ('servicebus' == nconf.get('SOCKET_STORAGE')) {
@@ -37,7 +39,7 @@ app.io.route('noMoreCheers', function(req) {
     updateRoom(schoolid);
     remainingCheerers = getCurrentCheerersForSchool(schoolid)
     console.log("sending final count of <" + remainingCheerers +"> for  <" +schoolid+ ">")
-    req.io.emit('cheerCount', {cheers: remainingCheerers})
+    req.io.emit('cheerCount', {cheers: remainingCheerers, totalCheers: app.io.sockets.clients().length})
 })
 
 // websocket route/event for getting current cheer count for any school
@@ -80,6 +82,25 @@ app.get('/schools', function(req, res) {
 app.get('/listcheers', function(req, res){
   res.json(getAllCurrentCheerers())
 })
+
+app.get('/public/js/core.js', function(req, res){
+    res.sendfile(__dirname + '/public/js/core.js');
+})
+app.get('/public/js/bufferLoader.js', function(req, res){
+    res.sendfile(__dirname + '/public/js/bufferLoader.js');
+})
+app.get('/public/sounds/Sports_Crowd.mp3', function(req, res){
+    var filePath = path.join(__dirname, '/public/sounds/Sports_Crowd.mp3');
+    var stat = fileSystem.statSync(filePath);
+
+    res.writeHead(200, {
+        'Content-Type': 'audio/mp3',
+        'Content-Length': stat.size
+    });
+
+    var readStream = fileSystem.createReadStream(filePath);
+    readStream.pipe(res);
+})
 /*
 
 // stubbed out for later use when/if converting console logging to in browser
@@ -106,7 +127,7 @@ app.listen(port)
 function updateRoom(id){
     console.log("broadcasting cheer count = <" +   getCurrentCheerersForSchool(schoolid) + "> for school <" + id + ">");
     app.io.room(id).broadcast("cheerCount",
-        {cheers: getCurrentCheerersForSchool(schoolid), schoolId: id}
+        {cheers: getCurrentCheerersForSchool(schoolid), schoolId: id, totalCheers: app.io.sockets.clients().length}
     )
 }
 
@@ -130,5 +151,14 @@ function getAllCurrentCheerers(){
   },[])
   return result
 }
-  
 
+function getTotalCheerers(){
+    result = _.inject(app.io.sockets.manager.rooms, function(all, socketids, room){
+        if (room != "") {
+            return all + socketids.length
+        } else {
+            return all
+        }
+    },0)
+    return result
+}
