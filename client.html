@@ -93,19 +93,18 @@ body{
       })
 
       $('#schoolid').change(function(){
-          leaveSchoolRoom(lastSelectedSchool);
           lastSelectedSchool = $(this).val();
           if(lastSelectedSchool >= 0){
-             io.emit('cheerCount', {id: lastSelectedSchool});
+            console.log("joining subscribe only for school <" + lastSelectedSchool + ">")
+            io.emit('joinSubscribeOnly', {id: lastSelectedSchool})
           }
       });
 
       io = io.connect()
-
       var timeout, holder = $('#cheerHold');
 
       io.on('cheerCount', function(data) {
-        console.log("got cheer count of <"+data.cheers+"> for school <"+data.schoolId+">")
+        console.log("got cheer count of <"+data.cheers+"> for school <"+data.schoolId+">. Total cheers: <" + data.totalCheers+">")
         $('#count').html(data.cheers);
           percent = (data.cheers / data.totalCheers) * 100;
           updateVolume(percent);
@@ -116,7 +115,7 @@ body{
           if(schoolid >= 0){
               // register a timeout that sends the cheer event every 500ms once the button is being pressed.
               //timeout = setInterval(function(){
-
+                  io.emit('leaveSubscribeOnly', {id: schoolid})
                   console.log("cheering for school id: " + schoolid);
                   io.emit('cheer!', {id: schoolid});
               //}, 1000);
@@ -130,9 +129,8 @@ body{
           console.log("departing cheering for school id: " + schoolid)
           //clearInterval(timeout);
           // explicitly tell the server that we have stopped cheering.
-          io.emit('noMoreCheers', {id: schoolid})
-          // decrement cheer value here manually since 
-          // client won't get the broadcast message update as not in room?
+          io.emit('noMoreCheers', {id: schoolid})          
+          io.emit('joinSubscribeOnly', {id: schoolid})
           return false;
       });
 

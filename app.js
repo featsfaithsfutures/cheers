@@ -30,6 +30,22 @@ app.io.route('cheer!', function(req) {
     updateRoom(schoolid);
 })
 
+app.io.route('joinSubscribeOnly', function(req) {
+  schoolid = req.data.id;
+  if(schoolid < 0) return;
+  console.log("joining subscriber-only room for school <"+schoolid+">")
+  req.io.join(getSubscriberOnlyRoom(schoolid))
+  req.io.emit('cheerCount', buildCheerData(schoolid))
+})
+
+app.io.route('leaveSubscribeOnly', function(req) {
+  schoolid = req.data.id;
+  if(schoolid < 0) return;
+  console.log("leaving subscriber-only room for school <"+schoolid+">")
+  req.io.leave(getSubscriberOnlyRoom(schoolid))
+})
+
+
 app.io.route('noMoreCheers', function(req) {
     schoolid = req.data.id;
     if(schoolid < 0) return;
@@ -37,9 +53,9 @@ app.io.route('noMoreCheers', function(req) {
     req.io.leave(schoolid)
     console.log("departed room <" +schoolid+ ">")
     updateRoom(schoolid);
-    remainingCheerers = getCurrentCheerersForSchool(schoolid)
-    console.log("sending final count of <" + remainingCheerers +"> for  <" +schoolid+ ">")
-    req.io.emit('cheerCount', {cheers: remainingCheerers, totalCheers: app.io.sockets.clients().length})
+    cheer_data = buildCheerData(schoolid)
+    console.log("sending final count of <" + cheer_data.cheers +"> for  <" +schoolid+ ">")
+    req.io.emit('cheerCount', cheer_data)
 })
 
 // websocket route/event for getting current cheer count for any school
@@ -48,7 +64,7 @@ app.io.route('cheerCount', function(req){
   if(schoolid < 0) return;
   cheerers = getCurrentCheerersForSchool(schoolid)
   console.log("sending count of <" + cheerers +"> for  <" +schoolid+ ">")
-  req.io.emit('cheerCount', {cheers: cheerers})
+  req.io.emit('cheerCount', buildCheerData(schoolid))
 })
 
 // websocket route/event for getting leaderboard
@@ -60,6 +76,10 @@ app.io.route('fetchLeaderBoard', function(req){
 
 app.get('/leaderboard', function(req, res){
   res.json(_.first(getLeaderBoard(), 10))
+})
+
+app.get('/total', function(req, res){
+  res.json(getTotalCheerers())
 })
 
 // plain http for getting current cheer count for any school
@@ -124,11 +144,20 @@ app.get('/admin', function(req, res) {
 
 app.listen(port)
 
-function updateRoom(id){
-    console.log("broadcasting cheer count = <" +   getCurrentCheerersForSchool(schoolid) + "> for school <" + id + ">");
-    app.io.room(id).broadcast("cheerCount",
-        {cheers: getCurrentCheerersForSchool(schoolid), schoolId: id, totalCheers: app.io.sockets.clients().length}
-    )
+function getSubscriberOnlyRoom(id){
+  return "_subscribers-only-" + id
+}
+
+
+function buildCheerData(_id){
+  return {cheers: getCurrentCheerersForSchool(_id), totalCheers: getTotalCheerers(), schoolId: _id}
+}
+
+function updateRoom(schoolid){
+  console.log("broadcasting cheer count = <" +   getCurrentCheerersForSchool(schoolid) + "> for school <" + schoolid + ">")
+  cheer_data = buildCheerData(schoolid)
+  app.io.room(schoolid).broadcast("cheerCount",cheer_data) 
+  app.io.room(getSubscriberOnlyRoom(schoolid)).broadcast("cheerCount",cheer_data)
 }
 
 function getLeaderBoard(){
@@ -140,10 +169,24 @@ function getCurrentCheerersForSchool(schoolid){
   return app.io.sockets.clients(schoolid).length
 }
 
+function isRoomCountable(room){
+ return ( (room != "") && (room.slice(0,3) != "/_s") ) 
+}
+
+function getTotalCheerers(){
+  result = _.inject(app.io.sockets.manager.rooms, function(all, socketids, room){
+    if (isRoomCountable(room)) {
+      return all + socketids.length
+    } else {
+      return all
+    }
+  },0)
+  return result
+}
 // return a mapping of room/school ids to number of participants (cheerers)
 function getAllCurrentCheerers(){
   result = _.inject(app.io.sockets.manager.rooms, function(all, socketids, room){
-    if (room != "") {
+    if (isRoomCountable(room)) {
       return all.concat([{id: room.slice(-1), cheers: socketids.length}])
     } else {
       return all
