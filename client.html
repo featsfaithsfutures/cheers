@@ -108,6 +108,7 @@ body{
                   io.emit('leaveSubscribeOnly', {id: schoolid})
                   console.log("cheering for school id: " + schoolid);
                   io.emit('cheer!', {id: schoolid});
+                  source.start(0)
               //}, 1000);
           }
           return false;
