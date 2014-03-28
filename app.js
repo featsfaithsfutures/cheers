@@ -94,6 +94,11 @@ app.get('/cheer', function(req, res) {
     res.sendfile(__dirname + '/client.html')
 })
 
+app.get('/leaders', function(req, res) {
+    res.sendfile(__dirname + '/leaderboard.html')
+})
+
+
 // Send the client html.
 app.get('/schools', function(req, res) {
     res.sendfile(__dirname + '/schools.json')
@@ -158,6 +163,7 @@ function updateRoom(schoolid){
   cheer_data = buildCheerData(schoolid)
   app.io.room(schoolid).broadcast("cheerCount",cheer_data) 
   app.io.room(getSubscriberOnlyRoom(schoolid)).broadcast("cheerCount",cheer_data)
+  app.io.broadcast("globalCheerCount", cheer_data)
 }
 
 function getLeaderBoard(){

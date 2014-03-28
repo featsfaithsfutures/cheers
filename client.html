@@ -76,6 +76,7 @@ body{
           <option value="-1">Select a School...</option>
       </select>
       
+      <div id="global_cheers"></div>
       <div id="cheer_elements">
 	      <div id="count">0</div>
 	      <button id="cheerHold">CHEER! <br/> <p style="font-size:.4em; margin-top:0;">(PRESS &amp; HOLD)</p></button>
@@ -89,12 +90,13 @@ body{
 
       // Global Properties
       var lastSelectedSchool = -1;
-
+      var schools = []
       $.ajax({
         url: '/schools',
         dataType: 'json',
         success: function( json ) {
             $.each(json, function(i, name) {
+                schools[i] = name
                 $('#schoolid').append($('<option>').text(name).attr('value', i));
             });
         }
@@ -118,6 +120,16 @@ body{
           updateVolume(percent);
       })
 
+      io.on('globalCheerCount', function(data) {
+        // this should be animated. maybe a ticker?
+        console.log("got global cheer data of <"+data.cheers+"> for school <"+data.schoolId+">. Total cheers: <" + data.totalCheers+">")
+        if(data.cheers > 0) {
+        $('#global_cheers').html(data.cheers+" cheering for school <span class='school'>"+schools[data.schoolId]+"</span>")
+        } else {
+          $('#global_cheers').html("")
+        }
+      })
+      
       holder.on("vmousedown", function(){
           schoolid = $('#schoolid').val();
           if(schoolid >= 0){
