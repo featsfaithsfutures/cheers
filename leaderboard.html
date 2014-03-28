@@ -4,6 +4,7 @@
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
     <script src="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.2/jquery.mobile.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+        <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.2/jquery.mobile.min.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     
@@ -35,25 +36,21 @@
 
 
 .leaderboard{
-  width: 22em;
-  padding: 0;
 }
 
-.school-tile {
-  float: left;
-  display: inline-block;
-	color: white;
-	font-size: 15px;
-  font-family: sans-serif;
-	border-radius: 120px;
-	padding: 6px;
-	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-	background: #FF770C;
-	height: 7em;
-	width: 7em;
-	margin: 1em;
-	border: 2px solid #fff;
-	box-shadow: 0px 0px 2px #333;
+a {text-decoration: none;}
+.touch-circle {
+  	color: #999;
+  	border-radius: 120px;
+  	padding: 6px;
+  	background: #444;
+  	height: 8em;
+  	width: 8em;
+  	margin: auto;
+  	border: 1px solid #fff;
+
+}
+.school-tile {  
   
 }
 
@@ -76,8 +73,11 @@
       <select id="schoolid" value="Default High">
           <option value="-1">Select a School...</option>
       </select>
+     <input type="button" onclick="clearInterval(timer)" value="stop">
+     
     </div>
-    <div id="leaderboard"></div>
+    
+    <div id="leaderboard"  class="ui-grid-b"></div>
   </body>
   <script>
     
@@ -106,7 +106,7 @@
   var timer = setInterval( function() {
     console.log("fetching leaderboard")
     io.emit('fetchLeaderBoard', {top: 9})
-  }, 5000)
+  }, 3000)
   
   console.log("setting up display")
   io.on('leaderBoard', function(data) {
@@ -114,14 +114,21 @@
     $("#leaderboard").html("")
     console.log("got leaderboard data")
     for(p in data){
-        anchor = $("<a></a>").attr('href', '/cheer/'+data[p].id)
-       school = $("<div class='school-tile'></div>")
+      i = parseInt(p)
+      blocks = ["a", "b", "c", "a", "b", "c", "a", "b", "c"]
+      anchor = $("<a></a>").attr('href', '/cheer/'+data[p].id)
+      parent = $("<div></div>").attr("class", "ui-block-"+ blocks[i])
+       school = $("<div class='ui-bar ui-bar-a'></div>")
+       school.css('height','10em')
+       circle = $("<div></div>").attr("class", "touch-circle")
        label = $("<p class='school-name'>"+schools[data[p].id]+"</p>")
        count = $("<p class='school-cheers'><span class='count'>"+data[p].cheers+"</span> people cheering</p>")
-       school.append(label)
-       school.append(count)
+       circle.append(label)
+       circle.append(count)
+       school.append(circle)
        anchor.append(school)
-       $("#leaderboard").append(anchor)
+       parent.append(anchor)
+       $("#leaderboard").append(parent)
     }
   })
   
