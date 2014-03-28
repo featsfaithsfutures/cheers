@@ -5,6 +5,7 @@ window.AudioContext = window.AudioContext || window.webkitAudioContext;
 var context;
 var bufferLoader;
 var cheerBuffer = null;
+var source = null;
 var cheerGain = null;
 
 $(function(){
@@ -28,25 +29,41 @@ function preloadSounds() {
 
 function finishedLoading(bufferList) {
     cheerBuffer = bufferList[0];
-    startCheer();
+    initCheer();
 }
 
-function startCheer()
+function initCheer()
 {
-    var source = context.createBufferSource();
-    source.buffer = cheerBuffer;
-
-    source.connect(context.destination);
-    source.loop = true;
+    if (!context.createGain)
+        context.createGain = context.createGainNode;
     // Create a gain node.
     cheerGain = context.createGain();
+
+    source = context.createBufferSource();
+    source.buffer = cheerBuffer;
+
     // Connect the source to the gain node.
     source.connect(cheerGain);
     // Connect the gain node to the destination.
     cheerGain.connect(context.destination);
 
+    source.loop = true;
     // automatically start cheering at volume 0 until we get a update from server
     updateVolume(0);
+    startCheer();
+
+
+}
+
+function stopCheer()
+{
+    if (!source.stop)
+        source.stop = source.noteOff;
+    source.stop(0);
+}
+
+function startCheer()
+{
     if (!source.start)
         source.start = source.noteOn;
     source.start(0);
@@ -54,6 +71,6 @@ function startCheer()
 
 function updateVolume(volume){
     console.log('playing sound at volume: ' + volume);
-    var fraction = volume / 100;
+    var fraction = parseInt(volume) / 100;
     cheerGain.gain.value = fraction;
 }
