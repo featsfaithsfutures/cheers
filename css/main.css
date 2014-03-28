@@ -121,7 +121,14 @@ height: 9em;
 width: 9em;
 margin: auto;
 border: 6px solid #fff;
-box-shadow: 0px 0px 10px #333;}
+box-shadow: 0px 0px 10px #333;
+transition:linear .05s;
+}
+
+#cheerHold:active{
+	background: #000;
+	transition:linear .05s;
+}
 
 
 
