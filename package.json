@@ -8,6 +8,9 @@
     },
   "dependencies": {
     "express.io": "latest",
-    "nodemon": "latest"
+    "nodemon": "latest",
+    "socket.io-servicebus": "latest",
+    "nconf":"latest",
+    "underscore": "latest"
   }
 }

@@ -1,41 +1,134 @@
+var _ = require('underscore');
 app = require('express.io')()
+var nconf   = require('nconf')
 app.http().io()
-var port = 2014
-// hacky "global" to keep track of cheers. Drops back to zero on process exit
-var cheers = []
+var port = process.env.PORT || 2014
+nconf.file('config.json').env();
 
+if ('servicebus' == nconf.get('SOCKET_STORAGE')) {
+  console.log("Using servicebus as store in production")
+  var SbStore = require('socket.io-servicebus');
+  app.io.configure(function(){
+    app.io.set('store', new SbStore({
+      topic: nconf.get("SERVICE_BUS_TOPIC"),
+      connectionString: nconf.get("SERVICE_BUS_ENDPOINT"),
+      logger: app.io.get('logger')
+    }));
+  });  
+} else {
+  console.log("using default socket.io memory store")
+}
 
 app.io.route('cheer!', function(req) {
-  // need to make sure clients are unique in max counts & room joining 
-  schoolid = req.data.id
-  console.log("joining room <" +schoolid+ ">")
-  req.io.join(schoolid)
-  console.log("registering a cheer for school <" +schoolid+ ">")
-  cheers[schoolid] = (++cheers[schoolid] || 0) // max cheers in this process lifetime
-  console.log("broadcasting cheer count = " +  app.io.sockets.clients(schoolid).length)
-  
-  // broadcast this to _all_ clients connected to this school room
-  app.io.room(schoolid).broadcast("cheerCount", 
-    {cheers: app.io.sockets.clients(schoolid).length}
-  )
+    schoolid = req.data.id;
+    if(schoolid < 0) return;
+    console.log("registering a cheer for school <" +schoolid+ ">");
+    req.io.join(schoolid)
+    console.log("joined room <" +schoolid+ ">")    
+    updateRoom(schoolid);
 })
 
 app.io.route('noMoreCheers', function(req) {
-  schoolid = req.data.id
-  console.log("departing room <" +schoolid+ ">")
-  req.io.leave(schoolid)
-  // broadcast this to _all_ clients connected to this school room
-  console.log("broadcasting cheer count = " +  app.io.sockets.clients(schoolid).length)
-  app.io.room(schoolid).broadcast("cheerCount", 
-    {cheers: app.io.sockets.clients(schoolid).length}
-  )
-  req.io.respond({cheers: app.io.sockets.clients(schoolid).length})
+    schoolid = req.data.id;
+    if(schoolid < 0) return;
+    console.log("de-registering to cheer for school <" +schoolid+ ">");
+    req.io.leave(schoolid)
+    console.log("departed room <" +schoolid+ ">")
+    updateRoom(schoolid);
+    remainingCheerers = getCurrentCheerersForSchool(schoolid)
+    console.log("sending final count of <" + remainingCheerers +"> for  <" +schoolid+ ">")
+    req.io.emit('cheerCount', {cheers: remainingCheerers})
+})
+
+// websocket route/event for getting current cheer count for any school
+app.io.route('cheerCount', function(req){
+  schoolid = req.data.id;
+  if(schoolid < 0) return;
+  cheerers = getCurrentCheerersForSchool(schoolid)
+  console.log("sending count of <" + cheerers +"> for  <" +schoolid+ ">")
+  req.io.emit('cheerCount', {cheers: cheerers})
+})
+
+// websocket route/event for getting leaderboard
+app.io.route('fetchLeaderBoard', function(req){
+  console.log("sending leaderboard")
+  req.io.emit('displayLeaderBoard', _.first(getLeaderBoard(), 10))
 })
 
 
-// Send the client html.
+app.get('/leaderboard', function(req, res){
+  res.json(_.first(getLeaderBoard(), 10))
+})
+
+// plain http for getting current cheer count for any school
+app.get('/cheer_count/:id', function(req, res){
+  schoolid = req.params.id;
+  if(schoolid < 0) return {};
+  res.json({cheers: getCurrentCheerersForSchool(schoolid)})
+})
+
+
 app.get('/cheer', function(req, res) {
     res.sendfile(__dirname + '/client.html')
 })
 
+// Send the client html.
+app.get('/schools', function(req, res) {
+    res.sendfile(__dirname + '/schools.json')
+})
+
+app.get('/listcheers', function(req, res){
+  res.json(getAllCurrentCheerers())
+})
+/*
+
+// stubbed out for later use when/if converting console logging to in browser
+app.io.route('admin-listen', function(req) {
+  req.io.join("admin")
+}
+
+app.io.route('admin-depart', function(req) {
+  req.io.leave("admin")
+}
+
+// Send the admin html.
+app.get('/admin', function(req, res) {
+    res.sendfile(__dirname + '/admin.html')
+})
+*/
+
+/*
+ look at setInterval(callback, delay, [arg], [...]) for running archival queue push
+*/
+
 app.listen(port)
+
+function updateRoom(id){
+    console.log("broadcasting cheer count = <" +   getCurrentCheerersForSchool(schoolid) + "> for school <" + id + ">");
+    app.io.room(id).broadcast("cheerCount",
+        {cheers: getCurrentCheerersForSchool(schoolid), schoolId: id}
+    )
+}
+
+function getLeaderBoard(){
+  return _.sortBy(getAllCurrentCheerers(), function(item){return item.cheers}).reverse()
+}
+
+// hide the implentation incase we go back to a sep. external array
+function getCurrentCheerersForSchool(schoolid){
+  return app.io.sockets.clients(schoolid).length
+}
+
+// return a mapping of room/school ids to number of participants (cheerers)
+function getAllCurrentCheerers(){
+  result = _.inject(app.io.sockets.manager.rooms, function(all, socketids, room){
+    if (room != "") {
+      return all.concat([{id: room.slice(-1), cheers: socketids.length}])
+    } else {
+      return all
+    }
+  },[])
+  return result
+}
+  
+
