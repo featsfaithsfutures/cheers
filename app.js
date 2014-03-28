@@ -70,7 +70,8 @@ app.io.route('cheerCount', function(req){
 // websocket route/event for getting leaderboard
 app.io.route('fetchLeaderBoard', function(req){
   console.log("sending leaderboard")
-  req.io.emit('displayLeaderBoard', _.first(getLeaderBoard(), 10))
+  //req.io.emit('leaderBoard', _.first(getLeaderBoard(), 10)) // replace after testing
+  req.io.emit('leaderBoard', generateFakeLeaderBoard()) // TODO: switch out fake data 
 })
 
 
@@ -147,6 +148,7 @@ app.get('/admin', function(req, res) {
  look at setInterval(callback, delay, [arg], [...]) for running archival queue push
 */
 
+
 app.listen(port)
 
 function getSubscriberOnlyRoom(id){
@@ -210,4 +212,15 @@ function getTotalCheerers(){
         }
     },0)
     return result
+}
+
+function generateFakeLeaderBoard(){
+  lb = []
+  for(var i = 0; i<=10; i++){ 
+    lb = lb.concat({
+        id: Math.floor(Math.random() * 100).toString(), 
+        cheers: Math.floor(Math.random() * 20) + 1
+    })
+  } 
+  return _.sortBy(lb, function(item){return item.cheers}).reverse()
 }
