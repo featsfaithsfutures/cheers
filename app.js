@@ -49,25 +49,6 @@ app.io.route('cheerCount', function(req){
   req.io.emit('cheerCount', {cheers: cheerers})
 })
 
-// Route for joining a school room by Id
-app.io.route('joinSchool', function(req) {
-    schoolid = req.data.id
-    console.log("got join school event for <" +schoolid+ ">")
-    //req.io.join(schoolid)
-    //updateRoom(schoolid);
-})
-
-// Route for leaving a school room by Id
-app.io.route('leaveSchool', function(req){
-    schoolid = req.data.id
-    console.log("got leave school event for<" +schoolid+ ">")
-    //req.io.leave(schoolid)
-    //updateRoom(schoolid);    
-})
-
-
-
-// Send the client html.
 
 // plain http for getting current cheer count for any school
 app.get('/cheer_count/:id', function(req, res){

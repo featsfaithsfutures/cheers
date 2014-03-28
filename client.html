@@ -52,54 +52,37 @@
 
       io = io.connect()
 
+      var timeout, holder = $('#cheerHold');
 
+      io.on('cheerCount', function(data) {
+        console.log("got cheer count of <"+data.cheers+"> for school <"+data.schoolId+">")
+        $('#count').html(data.cheers);
+      })
 
-        var timeout, holder = $('#cheerHold');
+      holder.on("vmousedown", function(){
+          schoolid = $('#schoolid').val();
+          if(schoolid >= 0){
+              // register a timeout that sends the cheer event every 500ms once the button is being pressed.
+              //timeout = setInterval(function(){
 
-        io.on('cheerCount', function(data) {
-          console.log("got cheer count of <"+data.cheers+"> for school <"+data.schoolId+">")
-          $('#count').html(data.cheers);
-        })
-
-        // maybe an onload method for populating the cheer number for a school id?
-
-        holder.on("vmousedown", function(){
-            schoolid = $('#schoolid').val();
-            if(schoolid >= 0){
-                // register a timeout that sends the cheer event every 500ms once the button is being pressed.
-                //timeout = setInterval(function(){
-
-                    console.log("cheering for school id: " + schoolid);
-                    io.emit('cheer!', {id: schoolid});
-                //}, 1000);
-            }
-            return false;
-        });
-
-        holder.on("vmouseup mouseup mouseleave", function(){
-          console.log("button released")
-            schoolid = $('#schoolid').val()
-            console.log("departing cheering for school id: " + schoolid)
-            clearInterval(timeout);
-            // explicitly tell the server that we have stopped cheering.
-            io.emit('noMoreCheers', {id: schoolid})
-            // decrement cheer value here manually since 
-            // client won't get the broadcast message update as not in room?
-            return false;
-        });
-
-
-        function joinSchoolRoom(id){
-          if(id >= 0){
-            io.emit('joinSchool', {id: id})
+                  console.log("cheering for school id: " + schoolid);
+                  io.emit('cheer!', {id: schoolid});
+              //}, 1000);
           }
-        }
+          return false;
+      });
 
-        function leaveSchoolRoom(id){
-          if(id >= 0){
-            io.emit('leaveSchool', {id: id})
-          }
-        }
+      holder.on("vmouseup mouseup mouseleave", function(){
+        console.log("button released")
+          schoolid = $('#schoolid').val()
+          console.log("departing cheering for school id: " + schoolid)
+          //clearInterval(timeout);
+          // explicitly tell the server that we have stopped cheering.
+          io.emit('noMoreCheers', {id: schoolid})
+          // decrement cheer value here manually since 
+          // client won't get the broadcast message update as not in room?
+          return false;
+      });
 
   </script>
 </html>
