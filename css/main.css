@@ -128,7 +128,7 @@ transition:linear .1s;
 #cheerHold:active{
 	border: 6px solid #ff8b8b;
 	background: #ff1212;
-	box-shadow: 0px 0px 30px #333;
+	box-shadow: 0px 0px 30px #000 inset;
 	transition:linear .1s;
 }
 

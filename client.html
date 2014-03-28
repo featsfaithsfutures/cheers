@@ -6,24 +6,48 @@
     <script src="/socket.io/socket.io.js"></script>
     <script src="/public/js/bufferLoader.js"></script>
     <script src="/public/js/core.js"></script>
-    <link rel="stylesheet" type="text/css" href="css/css/normalize.css.css">
-    <link rel="stylesheet" type="text/css" href="css/main.css">
     
     <meta name="viewport" content="width=device-width, initial-scale=1">
     
     <style type="text/css">
-      
+      #count {height: 1.5em;}
+
+#cheerHold {
+        color: white;
+font-size: 160%;
+border-radius: 120px;
+padding: 6px;
+text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+background: #FF770C;
+height: 9em;
+width: 9em;
+margin: auto;
+border: 6px solid #fff;
+box-shadow: 0px 0px 10px #333;
+transition:linear .1s;
+}
+
+#cheerHold:active{
+	border: 6px solid #ff8b8b;
+	background: #ff1212;
+	box-shadow: 0px 0px 30px #000 inset;
+	transition:linear .1s;
+}
+
     </style>
   </head>
   <body>
-    <div>
+  
+    <div class="">
       <select id="schoolid" value="Default High">
           <option value="-1">Select a School...</option>
       </select>
-      <div id="count">?</div>
+      
+      <div id="count">0</div>
       <button id="cheerHold">CHEER!</button>
       <div id="leaderBoard"></div>
     </div>
+    
   </body>
   <script>
 
