@@ -1,0 +1,71 @@
+<html>
+  <head>
+    <title>2 Cheerz</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.2/jquery.mobile.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    
+    <style type="text/css">
+      #count {height: 1.5em;}
+      #cheerHold {
+         	width: 16em;
+			height: 16em;
+			background-color: #ee4;
+			padding: 0.25em;
+			border-radius: 150;
+			margin: auto;
+       }
+    </style>
+  </head>
+  <body>
+    <div>
+      School id: <input type="text" id="schoolid" value="Default High"/>
+      <div id="count"></div>
+      <div id="cheerHold">cheer<div>
+    </div>
+  </body>
+  <script>
+  
+    io = io.connect()
+
+    var timeout, holder = $('#cheerHold');    
+
+    io.on('cheerCount', function(data) {
+      $('#count').html('<p>cheers = ' + data.cheers +' </p>')
+      // this isn't being reset to 0 after all presses are released 
+      // even though 0 is being broadcast
+      // i'm too dumb to figure it out now
+    })
+    
+    // maybe an onload method for populating the cheer number for a school id?
+    
+    holder.on("vmousedown", function(){
+        schoolid = $('#schoolid').val()
+        console.log("cheering for school id: " + schoolid)
+        io.emit('cheer!', {id: schoolid})      
+        //timeout = setInterval(function(){
+          // do some stuff while the button is being held down
+          // perhaps only register for cheerCounts while held down
+          //}, 500);
+
+        return false;
+    });
+
+    holder.on("vmouseup", function(){
+      console.log("button released")
+        schoolid = $('#schoolid').val()
+        console.log("departing cheering for school id: " + schoolid)
+        clearInterval(timeout);
+        // momentary HACK to see zero
+        io.emit('noMoreCheers', {id: schoolid}, function(data){
+          $('#count').html('<p>cheers = ' + data.cheers +' </p>')
+        })   
+        return false;
+    });
+    
+
+
+
+  </script>
+</html>

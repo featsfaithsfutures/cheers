@@ -51,6 +51,16 @@ app.io.route('cheerCount', function(req){
   req.io.emit('cheerCount', {cheers: cheerers})
 })
 
+// websocket route/event for getting leaderboard
+app.io.route('fetchLeaderBoard', function(req){
+  console.log("sending leaderboard")
+  req.io.emit('displayLeaderBoard', _.first(getLeaderBoard(), 10))
+})
+
+
+app.get('/leaderboard', function(req, res){
+  res.json(_.first(getLeaderBoard(), 10))
+})
 
 // plain http for getting current cheer count for any school
 app.get('/cheer_count/:id', function(req, res){
@@ -121,6 +131,10 @@ function updateRoom(id){
     )
 }
 
+function getLeaderBoard(){
+  return _.sortBy(getAllCurrentCheerers(), function(item){return item.cheers}).reverse()
+}
+
 // hide the implentation incase we go back to a sep. external array
 function getCurrentCheerersForSchool(schoolid){
   return app.io.sockets.clients(schoolid).length
@@ -129,9 +143,12 @@ function getCurrentCheerersForSchool(schoolid){
 // return a mapping of room/school ids to number of participants (cheerers)
 function getAllCurrentCheerers(){
   result = _.inject(app.io.sockets.manager.rooms, function(all, socketids, room){
-    if( room != "" ) { all[room.slice(-1)] = socketids.length }
-    return all
-  },{})
+    if (room != "") {
+      return all.concat([{id: room.slice(-1), cheers: socketids.length}])
+    } else {
+      return all
+    }
+  },[])
   return result
 }
 
