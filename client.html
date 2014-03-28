@@ -10,9 +10,23 @@
 
     
     <style type="text/css">
+header{
+	background:url('http://imageshack.com/a/img853/5536/ybf7.png') repeat-x #fff;
+	height: 70px;
+	width: 100%;
+	margin: 0;
+	border-bottom: 1px solid #eee;
+}
 body{
 	background: #f3fbff;
+	margin: 0px;
 	}
+.logo{
+	background:url('http://imageshack.com/a/img42/1418/qqze.png') no-repeat;
+	height: 70px;
+	width: 200px;
+	margin: auto;
+}
 #cheer_elements{
 	width: 100%;
 	float: left;
@@ -52,7 +66,11 @@ body{
     </style>
   </head>
   <body>
-  
+  	<header>
+	  	<div class="logo">
+		  	
+	  	</div>
+  	</header>
     <div class="">
       <select id="schoolid" value="Default High">
           <option value="-1">Select a School...</option>
@@ -60,7 +78,7 @@ body{
       
       <div id="cheer_elements">
 	      <div id="count">0</div>
-	      <button id="cheerHold">CHEER!</button>
+	      <button id="cheerHold">CHEER! <br/> <p style="font-size:.4em; margin-top:0;">(PRESS &amp; HOLD)</p></button>
 	      <div id="leaderBoard"></div>
       </div>
       
