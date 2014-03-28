@@ -69,9 +69,10 @@ app.io.route('cheerCount', function(req){
 
 // websocket route/event for getting leaderboard
 app.io.route('fetchLeaderBoard', function(req){
+  boardSize = req.data.top
   console.log("sending leaderboard")
   //req.io.emit('leaderBoard', _.first(getLeaderBoard(), 10)) // replace after testing
-  req.io.emit('leaderBoard', generateFakeLeaderBoard()) // TODO: switch out fake data 
+  req.io.emit('leaderBoard', generateFakeLeaderBoard().slice(0,boardSize)) // TODO: switch out fake data 
 })
 
 
@@ -91,11 +92,11 @@ app.get('/cheer_count/:id', function(req, res){
 })
 
 
-app.get('/', function(req, res) {
+app.get('/cheer/:id?', function(req, res) {
     res.sendfile(__dirname + '/client.html')
 })
 
-app.get('/leaders', function(req, res) {
+app.get('/', function(req, res) {
     res.sendfile(__dirname + '/leaderboard.html')
 })
 
