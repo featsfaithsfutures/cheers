@@ -82,6 +82,7 @@ body{
 	float: left;
 	width: 33.33%;
 	height: 8em;
+	text-align: center;
 }
 #board-1{
 	background: #f89f2e;
@@ -92,6 +93,30 @@ body{
 #board-3{
 	background: #eb431d;
 }
+h3{
+	-webkit-margin-before: 0px;
+	-webkit-margin-after: 0px;
+	-webkit-margin-start: 0px;
+	-webkit-margin-end: 0px;
+}
+p {
+	display: block;
+	-webkit-margin-before: 0px;
+	-webkit-margin-after: 0px;
+	-webkit-margin-start: 0px;
+	-webkit-margin-end: 0px;
+}
+.outer_place{
+	padding: 3px;
+	color: #fff;
+}
+.trophy{
+	height: 2em;
+	width: 2em;
+	background: #333;
+	border-radius: 60px;
+	line-height: 1.9;
+}
     </style>
   </head>
   <body>
@@ -101,7 +126,7 @@ body{
       </div>
     </div>
     <div class="ui-grid-b">
-    	<div id="board-1" class="ui-block-a place"><h3>1st</h3><p class="count"></p><p class="school"></p></div>
+    	<div id="board-1" class="ui-block-a place"><h3><div class="trophy">1st</div></h3><p class="count"></p><p class="school"></p></div>
     	<div id="board-2"  class="ui-block-b place"><h3>2nd</h3><p class="count"></p><p class="school"></p></div>
     	<div id="board-3"  class="ui-block-c place"><h3>3rd</h3><p class="count"></p><p class="school"></p></div>
     </div>
@@ -112,6 +137,7 @@ body{
           <option value="-1">Select a School...</option>
         </select>
     </div>
+    
     <div id="cheer_elements">
 	        <div id="count">0</div>
 	          <button id="cheerHold">CHEER! <br/> <p style="font-size:.4em; margin-top:0;">(PRESS &amp; HOLD)</p></button>
