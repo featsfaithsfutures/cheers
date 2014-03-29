@@ -2,48 +2,64 @@
   <head>
     <title>Cheer Fi Mi</title>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
-    <!--script src="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.2/jquery.mobile.min.js"></script-->
-    <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.2/jquery.mobile.min.js"></script>
     <script src="/socket.io/socket.io.js"></script>
+        <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.2/jquery.mobile.min.css" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
 
     
     <style type="text/css">
-header{
-	background:url('http://imageshack.com/a/img853/5536/ybf7.png') repeat-x #fff;
-	height: 70px;
-	width: 100%;
-	margin: 0;
-	border-bottom: 1px solid #eee;
-}
-body{
-	background: #f3fbff;
-	margin: 0px;
-	}
-.logo{
-	background:url('http://imageshack.com/a/img42/1418/qqze.png') no-repeat;
-	height: 70px;
-	width: 200px;
-	margin: auto;
-}
-
+    header{
+    	background: #2179bc;
+    	height: 70px;
+    	width: 100%;
+    	margin: 0;
+    	border-bottom: 6px solid #fff;
+    	box-shadow: 0px 0px 5px #e0e0e0;
+    }
+    body{
+    	background: #f3fbff;
+    	margin: 0px;
+    	}
+    .logo{
+    	background:url('http://imageshack.com/a/img23/1791/7dcp.png') no-repeat;
+    	height: 70px;
+    	width: 200px;
+    	margin: auto;
+    }
+    
 .graph {
   background: green;
   padding: 0.2em;
   display:inline-block;
 }
 
-.entry {
-  margin: 0.5em;
 
+.leaderboard{
 }
 
-.name {
-  display:inline-block;
-  width: 20em;
-  text-align: right;
-  margin: 0.2em;
+a {text-decoration: none;}
+.touch-circle {
+  	color: #999;
+  	border-radius: 120px;
+  	padding: 6px;
+  	background: #444;
+  	height: 8em;
+  	width: 8em;
+  	margin: auto;
+  	border: 1px solid #fff;
+
 }
+.school-tile {  
+  
+}
+
+.school-name {
+  font-size: 0.7em;
+}
+
+.school-cheers {font-size: 1em;}
+.school-cheers > .count { font-weight: bold;}
     </style>
   </head>
   <body>
@@ -51,11 +67,20 @@ body{
 	  	<div class="logo">
 		  	
 	  	</div>
+      <div >
   	</header>
-    <input type="button" onclick="clearInterval(timer)" value="stop">
-    <div id="leaderboard"></div>
+    <div class="">
+      <select id="schoolid" value="Default High">
+          <option value="-1">Select a School...</option>
+      </select>
+     <input type="button" onclick="clearInterval(timer)" value="stop">
+     
+    </div>
+    
+    <div id="leaderboard"  class="ui-grid-b"></div>
   </body>
   <script>
+    
   io = io.connect()
      
   var schools = []
@@ -65,49 +90,45 @@ body{
     success: function( json ) {
         $.each(json, function(i, name) {
             schools[i] = name
+            $('#schoolid').append($('<option>').text(name).attr('value', i));
+            
         });
     }
   })
   
+  $('#schoolid').change(function(){
+      lastSelectedSchool = $(this).val();
+      if(lastSelectedSchool >= 0){
+        window.location = "/cheer/" + lastSelectedSchool
+      }
+  });
+  
   var timer = setInterval( function() {
     console.log("fetching leaderboard")
-    io.emit('fetchLeaderBoard')
-  }, 5000)
+    io.emit('fetchLeaderBoard', {top: 9})
+  }, 3000)
   
   console.log("setting up display")
   io.on('leaderBoard', function(data) {
     console.log("clearing")
     $("#leaderboard").html("")
     console.log("got leaderboard data")
-    maxCheers = data.reduce(function(acc, item){
-      if(item.cheers > acc) {
-        return item.cheers
-      } else {
-        return acc
-      }
-    }, 0)
-    
-    maxLabelWidth= data.reduce(function(acc, item){
-      if(schools[item.id].length > acc) {
-        return schools[item.id].length
-      } else {
-        return acc
-      }
-    }, 0)
-    console.log("max cheers = " + maxCheers)
     for(p in data){
-       width = Math.floor(100 * data[p].cheers / maxCheers)
-       entry = $("<div class='entry'></div>")
-       label = $("<span class='name'></span>")
-       label.css('width', maxLabelWidth/2 + "em")
-       label.html(schools[data[p].id])
-       console.log(entry)
-       graph = $("<span class='graph'></span>")
-       graph.css('width', width + 50 + "px") // 50 for minimum box size
-       graph.html(data[p].cheers + " cheers")
-       entry.append(label)
-       entry.append(graph)
-       $("#leaderboard").append(entry)
+      i = parseInt(p)
+      blocks = ["a", "b", "c", "a", "b", "c", "a", "b", "c"]
+      anchor = $("<a></a>").attr('href', '/cheer/'+data[p].id)
+      parent = $("<div></div>").attr("class", "ui-block-"+ blocks[i])
+       school = $("<div class='ui-bar ui-bar-a'></div>")
+       school.css('height','10em')
+       circle = $("<div></div>").attr("class", "touch-circle")
+       label = $("<p class='school-name'>"+schools[data[p].id]+"</p>")
+       count = $("<p class='school-cheers'><span class='count'>"+data[p].cheers+"</span> people cheering</p>")
+       circle.append(label)
+       circle.append(count)
+       school.append(circle)
+       anchor.append(school)
+       parent.append(anchor)
+       $("#leaderboard").append(parent)
     }
   })
   

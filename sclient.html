@@ -1,0 +1,177 @@
+<html>
+  <head>
+    <title>Cheer Fi Mi</title>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.0/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.2/jquery.mobile.min.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="/public/js/bufferLoader.js"></script>
+    <script src="/public/js/core.js"></script>
+    <link rel="stylesheet" href="//ajax.googleapis.com/ajax/libs/jquerymobile/1.4.2/jquery.mobile.min.css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+
+    
+    <style type="text/css">
+header{
+	background: #2179bc;
+	height: 70px;
+	width: 100%;
+	margin: 0;
+	border-bottom: 6px solid #fff;
+	box-shadow: 0px 0px 5px #e0e0e0;
+}
+body{
+	background: #f3fbff;
+	margin: 0px;
+	}
+.logo{
+	background:url('http://imageshack.com/a/img23/1791/7dcp.png') no-repeat;
+	height: 70px;
+	width: 200px;
+	margin: auto;
+}
+#cheer_elements{
+	width: 100%;
+	float: left;
+	text-align: center;
+}
+#count {
+	background: #8F8F8F;
+	width: 10em;
+	margin: 0 auto 5px;
+	font-size: 2em;
+	padding: 0px;
+	border-radius: 50;
+	height: 2em;
+	line-height: 2;
+	}
+#cheerHold {
+	color: white;
+	font-size: 160%;
+	border-radius: 120px;
+	padding: 6px;
+	text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+	background: #FF770C;
+	height: 9em;
+	width: 9em;
+	margin: auto;
+	border: 6px solid #fff;
+	box-shadow: 0px 0px 10px #333;
+	transition:linear .1s;
+}
+#cheerHold:active{
+	border: 6px solid #ff8b8b;
+	background: #ff1212;
+	box-shadow: 0px 0px 30px #000 inset;
+	transition:linear .1s;
+}
+#school_name{
+	background: #000;
+	height: 30px;
+	width: 100%;
+	float: left;
+}
+    </style>
+  </head>
+  <body>
+    <div class="ui-grid-solo">
+      <div class="ui-block-a">
+  	    <header><div class="logo"></div></header>
+      </div>
+    </div>
+    <div class="ui-grid-b">
+    	<div id="board-1" class="ui-block-a"><h3>1st</h3><p class="count"></p><p class="school"></p></div>
+    	<div id="board-2"  class="ui-block-b"><h3>2nd</h3><p class="count"></p><p class="school"></p></div>
+    	<div id="board-3"  class="ui-block-c"><h3>3rd</h3><p class="count"></p><p class="school"></p></div>
+    </div>
+    <div class="ui-grid-solo"><div class="ui-block-a">school's place</div></div>
+    <div class="ui-grid-solo">
+      <div class="ui-block-a">
+        <div id="cheer_elements">
+	        <div id="count">0</div>
+	          <button id="cheerHold">CHEER! <br/> <p style="font-size:.4em; margin-top:0;">(PRESS &amp; HOLD)</p></button>
+	        </div>
+        </div>
+      </div>
+    </div>
+  </body>
+  <script>
+
+      // Global Properties
+      var lastSelectedSchool = -1;
+      var schools = []
+      $.ajax({
+        url: '/schools',
+        dataType: 'json',
+        success: function( json ) {
+            $.each(json, function(i, name) {
+                schools[i] = name
+            });
+        }
+      })
+
+      
+      io = io.connect()
+      
+      var timer = setInterval( function() {
+        console.log("fetching leaderboard")
+        io.emit('fetchLeaderBoard', {top: 3})
+      }, 5000)
+      
+      io.on('leaderBoard', function(data) {
+        console.log("got leaderboard data")
+      
+        for(p in data){
+          var i = 1 + parseInt(p)
+          console.log(i)
+          $("#board-"+i+" .count").html( data[p].cheers )
+          $("#board-"+i+" .school").html( schools[data[p].id] )
+        }
+      })
+      
+      
+      var timeout, holder = $('#cheerHold');
+
+      io.on('cheerCount', function(data) {
+        console.log("got cheer count of <"+data.cheers+"> for school <"+data.schoolId+">. Total cheers: <" + data.totalCheers+">")
+        $('#count').html(data.cheers);
+          percent = (data.cheers / data.totalCheers) * 100;
+          updateVolume(percent);
+      })
+
+      io.on('globalCheerCount', function(data) {
+        // this should be animated. maybe a ticker?
+        console.log("got global cheer data of <"+data.cheers+"> for school <"+data.schoolId+">. Total cheers: <" + data.totalCheers+">")
+        if(data.cheers > 0) {
+        $('#global_cheers').html(data.cheers+" cheering for school <span class='school'>"+schools[data.schoolId]+"</span>")
+        } else {
+          $('#global_cheers').html("")
+        }
+      })
+      
+      holder.on("vmousedown", function(){
+          schoolid = $('#schoolid').val();
+          if(schoolid >= 0){
+              // register a timeout that sends the cheer event every 500ms once the button is being pressed.
+              //timeout = setInterval(function(){
+                  io.emit('leaveSubscribeOnly', {id: schoolid})
+                  console.log("cheering for school id: " + schoolid);
+                  io.emit('cheer!', {id: schoolid});
+                  source.start(0)
+              //}, 1000);
+          }
+          return false;
+      });
+
+      holder.on("vmouseup mouseup mouseleave", function(){
+        console.log("button released")
+          schoolid = $('#schoolid').val()
+          console.log("departing cheering for school id: " + schoolid)
+          //clearInterval(timeout);
+          // explicitly tell the server that we have stopped cheering.
+          io.emit('noMoreCheers', {id: schoolid})          
+          io.emit('joinSubscribeOnly', {id: schoolid})
+          return false;
+      });
+
+  </script>
+</html>
