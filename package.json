@@ -11,6 +11,7 @@
     "nodemon": "latest",
     "socket.io-servicebus": "latest",
     "nconf":"latest",
-    "underscore": "latest"
+    "underscore": "latest",
+    "azure": "latest"
   }
 }

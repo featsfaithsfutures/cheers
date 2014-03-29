@@ -1,11 +1,43 @@
-var _ = require('underscore');
-fileSystem = require('fs');
-path = require('path');
-app = require('express.io')()
-nconf   = require('nconf')
+_           = require('underscore');
+azure       = require('azure')
+fileSystem  = require('fs');
+path        = require('path');
+app         = require('express.io')()
+nconf       = require('nconf')
+
 app.http().io()
 port = process.env.PORT || 2014
 nconf.file('config.json').env();
+
+CheerDbQueueEnabled   = nconf.get("CHEER_DB_QUEUE_ENABLED") && nconf.get("CHEER_DB_ENDPOINT")
+cheerDbQueueConnected = false
+queueCheerCountForDB  = function(count){}
+if(CheerDbQueueEnabled){
+  console.log("Setting up Cheer DB Service Queue")
+  cheerStorageQueue = nconf.get("CHEER_DB_QUEUE_NAME")
+  console.log("Queue Name: " + cheerStorageQueue)
+  var serviceBusService = azure.createServiceBusService(nconf.get("CHEER_DB_ENDPOINT"));
+  serviceBusService.createQueueIfNotExists(cheerStorageQueue, function(error){
+      if(!error){
+         console.log("Sucessfully connected to queue service")
+         console.log("Creating cheer db queueing function")
+         queueCheerCountForDB = function(count){
+           if(count.length == 0){return}
+           message = {body: "cheer count", customProperties: count }
+           serviceBusService.sendQueueMessage(cheerStorageQueue, message, function(error){
+             if(!error){
+               console.log("successfully queued cheer count:")
+               console.log(count)
+             } else {
+               console.log("failed to queue cheer count of <" + count + ">")
+             }
+           })
+         }
+      } else {
+        console.log("Failed to connect to queue service")
+      }
+  })
+}
 
 if ('servicebus' == nconf.get('SOCKET_STORAGE')) {
   console.log("Using servicebus as store in production")
@@ -71,14 +103,14 @@ app.io.route('cheerCount', function(req){
 app.io.route('fetchLeaderBoard', function(req){
   boardSize = req.data.top
   console.log("sending leaderboard")
-  //req.io.emit('leaderBoard', _.first(getLeaderBoard(), 10)) // replace after testing
-  req.io.emit('leaderBoard', generateFakeLeaderBoard().slice(0,boardSize)) // TODO: switch out fake data 
+  req.io.emit('leaderBoard', _.first(getLeaderBoard(), boardSize))
+  //req.io.emit('leaderBoard', generateFakeLeaderBoard().slice(0,boardSize)) // TODO: switch out fake data 
 })
 
 
-app.get('/leaderboard', function(req, res){
-  res.json(_.first(getLeaderBoard(), 10))
-})
+//app.get('/leaderboard', function(req, res){
+//  res.json(_.first(getLeaderBoard(), 10))
+//})
 
 app.get('/total', function(req, res){
   res.json(getTotalCheerers())
@@ -96,9 +128,13 @@ app.get('/cheer/:id?', function(req, res) {
     res.sendfile(__dirname + '/sclient.html')
 })
 
-
-
 app.get('/', function(req, res) {
+    res.sendfile(__dirname + '/sclient.html')
+})
+
+
+
+app.get('/leaderboard', function(req, res) {
     res.sendfile(__dirname + '/leaderboard.html')
 })
 
@@ -169,6 +205,7 @@ function updateRoom(schoolid){
   app.io.room(schoolid).broadcast("cheerCount",cheer_data) 
   app.io.room(getSubscriberOnlyRoom(schoolid)).broadcast("cheerCount",cheer_data)
   app.io.broadcast("globalCheerCount", cheer_data)
+  queueCheerCountForDB(getAllCurrentCheerers())
 }
 
 function getLeaderBoard(){

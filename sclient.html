@@ -101,18 +101,16 @@ body{
       </div>
     </div>
     <div class="ui-grid-b">
-    	<div id="board-1" class="ui-block-a place"><h3>1st</h3><p class="count">100</p><p class="school">test</p></div>
-    	<div id="board-2"  class="ui-block-b place"><h3>2nd</h3><p class="count">100</p><p class="school">test</p></div>
-    	<div id="board-3"  class="ui-block-c place"><h3>3rd</h3><p class="count">100</p><p class="school">test</p></div>
+    	<div id="board-1" class="ui-block-a place"><h3>1st</h3><p class="count"></p><p class="school"></p></div>
+    	<div id="board-2"  class="ui-block-b place"><h3>2nd</h3><p class="count"></p><p class="school"></p></div>
+    	<div id="board-3"  class="ui-block-c place"><h3>3rd</h3><p class="count"></p><p class="school"></p></div>
     </div>
     <div class="ui-grid-solo"><div class="ui-block-a">school's place</div></div>
-    <div class="ui-grid-solo">
-      
-      <div class="ui-block-a">
-      </div>
-        
-      
-      
+    <div >
+
+        <select id="schoolid" value="Default High">
+          <option value="-1">Select a School...</option>
+        </select>
     </div>
     <div id="cheer_elements">
 	        <div id="count">0</div>
@@ -131,24 +129,31 @@ body{
         success: function( json ) {
             $.each(json, function(i, name) {
                 schools[i] = name
+                 $('#schoolid').append($('<option>').text(name).attr('value', i));
             });
         }
       })
 
+      $('#schoolid').change(function(){
+          lastSelectedSchool = $(this).val();
+          if(lastSelectedSchool >= 0){
+            console.log("joining subscribe only for school <" + lastSelectedSchool + ">")
+            io.emit('joinSubscribeOnly', {id: lastSelectedSchool})
+          }
+      });
       
       io = io.connect()
       
       var timer = setInterval( function() {
-        console.log("fetching leaderboard")
+        //console.log("fetching leaderboard")
         io.emit('fetchLeaderBoard', {top: 3})
       }, 5000)
       
       io.on('leaderBoard', function(data) {
-        console.log("got leaderboard data")
+        //console.log("got leaderboard data")
       
         for(p in data){
           var i = 1 + parseInt(p)
-          console.log(i)
           $("#board-"+i+" .count").html( data[p].cheers )
           $("#board-"+i+" .school").html( schools[data[p].id] )
         }
